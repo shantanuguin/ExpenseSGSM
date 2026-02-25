@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useStore } from "@/lib/store";
+import { useStore, EXCHANGE_RATES } from "@/lib/store";
 import {
   Trash2,
   Download,
@@ -34,13 +34,6 @@ export default function Settings() {
   const [convJOD, setConvJOD] = useState("");
   const [convINR, setConvINR] = useState("");
 
-  // Exchange rates (approximate)
-  const rates = {
-    USD: 1,
-    JOD: 0.71,
-    INR: 83.0,
-  };
-
   const handleConvert = (val: string, from: "USD" | "JOD" | "INR") => {
     const num = parseFloat(val);
     if (isNaN(num)) {
@@ -50,16 +43,16 @@ export default function Settings() {
       return;
     }
 
-    const usdVal = num / rates[from];
+    const usdVal = num / EXCHANGE_RATES[from];
 
     if (from === "USD") setConvUSD(val);
     else setConvUSD(usdVal.toFixed(2));
 
     if (from === "JOD") setConvJOD(val);
-    else setConvJOD((usdVal * rates.JOD).toFixed(3));
+    else setConvJOD((usdVal * EXCHANGE_RATES.JOD).toFixed(3));
 
     if (from === "INR") setConvINR(val);
-    else setConvINR((usdVal * rates.INR).toFixed(2));
+    else setConvINR((usdVal * EXCHANGE_RATES.INR).toFixed(2));
   };
 
   const handleAddCategory = () => {

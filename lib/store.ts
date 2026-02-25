@@ -18,6 +18,12 @@ import {
 export type Currency = "USD" | "JOD" | "INR";
 export type TimeOfDay = "Morning" | "Noon" | "Evening" | "Night";
 
+export const EXCHANGE_RATES: Record<Currency, number> = {
+  USD: 1,
+  JOD: 0.71,
+  INR: 83.0,
+};
+
 export interface Expense {
   id: string;
   amount: number;
@@ -78,7 +84,32 @@ export const useStore = create<AppState>()(
         return false;
       },
       logout: () => set({ currentUser: null, expenses: [] }),
-      setCurrency: (currency) => set({ currency }),
+      setCurrency: async (newCurrency) => {
+        const { currency: oldCurrency, expenses, currentUser } = get();
+        if (oldCurrency === newCurrency) return;
+
+        const rate = EXCHANGE_RATES[newCurrency] / EXCHANGE_RATES[oldCurrency];
+
+        const updatedExpenses = expenses.map(e => ({
+          ...e,
+          amount: Number((e.amount * rate).toFixed(2))
+        }));
+
+        set({ currency: newCurrency, expenses: updatedExpenses });
+
+        if (currentUser && updatedExpenses.length > 0) {
+          try {
+            const batch = writeBatch(db);
+            updatedExpenses.forEach((e) => {
+              const ref = doc(db, `users/${currentUser}/expenses`, e.id);
+              batch.update(ref, { amount: e.amount });
+            });
+            await batch.commit();
+          } catch (error) {
+            console.error("Error converting currencies in Firestore:", error);
+          }
+        }
+      },
       setExpenses: (expenses) => set({ expenses }),
       addExpense: async (expense) => {
         const { currentUser } = get();
