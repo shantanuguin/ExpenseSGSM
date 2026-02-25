@@ -1,0 +1,5 @@
+{
+  "name": "QuickSpense",
+  "description": "A minimalist, native-feeling web app for 1-tap expense tracking.",
+  "requestFramePermissions": []
+}
